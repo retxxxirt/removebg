@@ -55,10 +55,10 @@ class RemoveBgTestCase(TestCase):
         )
 
     def test_login(self):
-        self.assertEqual(self.client.login(
+        self.assertEqual(len(self.client.login(
             os.environ.get('REMOVEBG_USERNAME'),
             os.environ.get('REMOVEBG_PASSWORD')
-        ), os.environ.get('REMOVEBG_TOKEN'))
+        )), 24)
 
         self.assertRaises(
             LoginFailed, self.client.login,
@@ -73,4 +73,4 @@ class RemoveBgTestCase(TestCase):
         soup = BeautifulSoup(message['mail_html'], 'html.parser')
 
         self.client.activate_email(soup.select_one('.btn-primary')['href'])
-        self.assertIsInstance(self.client.login(tempmail.email, password), str)
+        self.assertEqual(len(self.client.login(tempmail.email, password)), 24)
