@@ -1,3 +1,6 @@
+from abc import ABC
+
+
 class RemoveBgException(Exception):
     pass
 
@@ -17,6 +20,23 @@ class LoginFailed(RemoveBgException):
         super().__init__(f'Unable to login into account for unknown reason. Account email: {email}.')
 
 
-class APIError(RemoveBgException):
-    def __init__(self, error: str):
-        super().__init__(f'API Error: {error}.')
+class APIException(RemoveBgException, ABC):
+    @property
+    def status_code(self):
+        raise NotImplementedError
+
+
+class InvalidParameters(APIException):
+    status_code = 400
+
+
+class InsufficientCredits(APIException):
+    status_code = 402
+
+
+class AuthenticationFailed(APIException):
+    status_code = 403
+
+
+class RateLimitExceeded(APIException):
+    status_code = 429
