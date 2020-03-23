@@ -4,7 +4,7 @@ from unittest import TestCase
 from requests import HTTPError
 
 from removebg import requests
-from removebg.exceptions import APIError
+from removebg.exceptions import AuthenticationFailed
 
 
 class RequestsTestCase(TestCase):
@@ -28,4 +28,4 @@ class RequestsTestCase(TestCase):
             data={'image_url': 'https://via.placeholder.com/625x400'}
         ).status_code, 200)
 
-        self.assertRaises(APIError, requests.make_api_request, 'POST', 'removebg', '')
+        self.assertRaises(AuthenticationFailed, requests.make_api_request, 'POST', 'removebg', '')

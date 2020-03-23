@@ -3,7 +3,14 @@ from json import JSONDecodeError
 import requests
 from requests import Session, Response, HTTPError
 
-from removebg.exceptions import APIError
+from removebg import exceptions
+
+API_EXCEPTIONS = [
+    exceptions.InvalidParameters,
+    exceptions.InsufficientCredits,
+    exceptions.AuthenticationFailed,
+    exceptions.RateLimitExceeded
+]
 
 
 def make_url(uri: str) -> str:
@@ -32,7 +39,11 @@ def make_api_request(method: str, uri: str, api_token: str, **kwargs) -> Respons
         return make_request(method, make_api_url(uri), **kwargs)
     except HTTPError as exception:
         try:
-            raise APIError(exception.response.json()['errors'][0]['title'])
+            error_message = exception.response.json()['errors'][0]['title']
         except (JSONDecodeError, KeyError, IndexError):
             pass
+        else:
+            for APIException in API_EXCEPTIONS:
+                if APIException.status_code == exception.response.status_code:
+                    raise APIException(error_message)
         raise

@@ -1,2 +1,2 @@
-from .exceptions import AccountCreationFailed, LoginFailed, APIError
+from .exceptions import AccountCreationFailed, LoginFailed, APIException
 from .removebg import RemoveBg
