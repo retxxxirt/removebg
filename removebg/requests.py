@@ -3,22 +3,15 @@ from json import JSONDecodeError
 import requests
 from requests import Session, Response, HTTPError
 
-from removebg import exceptions
-
-API_EXCEPTIONS = [
-    exceptions.InvalidParameters,
-    exceptions.InsufficientCredits,
-    exceptions.AuthenticationFailed,
-    exceptions.RateLimitExceeded
-]
+from . import constants
 
 
 def make_url(uri: str) -> str:
-    return f'https://www.remove.bg/{uri}'
+    return constants.WWW_ENDPOINT + uri
 
 
 def make_api_url(uri: str) -> str:
-    return f'https://api.remove.bg/v1.0/{uri}'
+    return constants.API_ENDPOINT + uri
 
 
 def make_request(method: str, url: str, session: Session = requests, **kwargs) -> Response:
@@ -43,7 +36,7 @@ def make_api_request(method: str, uri: str, api_token: str, **kwargs) -> Respons
         except (JSONDecodeError, KeyError, IndexError):
             pass
         else:
-            for APIException in API_EXCEPTIONS:
+            for APIException in constants.API_EXCEPTIONS:
                 if APIException.status_code == exception.response.status_code:
                     raise APIException(error_message)
         raise
