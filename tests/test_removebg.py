@@ -60,8 +60,8 @@ class RemoveBgTestCase(TestCase):
         client = RemoveBg(anticaptcha_token=os.environ.get('ANTICAPTCHA_TOKEN'))
         client.login(os.environ.get('REMOVEBG_USERNAME'), os.environ.get('REMOVEBG_PASSWORD'))
 
-        self.assertIsInstance(client._session_token, str)
-        self.assertIsInstance(client._api_token, str)
+        self.assertIsInstance(client.session_token, str)
+        self.assertIsInstance(client.api_token, str)
 
         self.assertRaises(
             exceptions.LoginFailed, client.login,
@@ -70,7 +70,7 @@ class RemoveBgTestCase(TestCase):
 
     def test_login_using_session_token(self):
         (client := RemoveBg()).login(session_token=os.environ.get('SESSION_TOKEN'))
-        self.assertIsInstance(client._api_token, str)
+        self.assertIsInstance(client.api_token, str)
 
     def test_get_available_credits(self):
         self.assertIsInstance(self.client.get_available_credits(), float)

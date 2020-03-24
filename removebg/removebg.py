@@ -11,9 +11,9 @@ from .requests import make_uri_request, make_request, make_url, make_api_request
 
 class RemoveBg:
     def __init__(self, api_token: str = None, session_token: str = None, anticaptcha_token: str = None):
-        self._api_token = api_token
-        self._session_token = session_token
-        self._anticaptcha_token = anticaptcha_token
+        self.api_token = api_token
+        self.session_token = session_token
+        self.anticaptcha_token = anticaptcha_token
 
     @token_required('anticaptcha')
     def _preauth(self, action: str) -> Tuple[Session, str, str]:
@@ -22,7 +22,7 @@ class RemoveBg:
 
         recaptcha_site_key = soup.select_one('.g-recaptcha')['data-sitekey']
 
-        (solve_job := AnticaptchaClient(self._anticaptcha_token).createTask(
+        (solve_job := AnticaptchaClient(self.anticaptcha_token).createTask(
             NoCaptchaTaskProxylessTask(make_url(f'users/{action}'), recaptcha_site_key)
         )).join()
 
@@ -47,12 +47,12 @@ class RemoveBg:
         if response.status_code != 302:
             raise LoginFailed(email)
 
-        self._session_token = session.cookies.get('remember_user_token')
+        self.session_token = session.cookies.get('remember_user_token')
 
     @token_required('session')
     def _get_profile(self) -> BeautifulSoup:
         response = make_uri_request('GET', 'profile', headers={
-            'cookie': f'remember_user_token={self._session_token}'
+            'cookie': f'remember_user_token={self.session_token}'
         })
 
         return BeautifulSoup(response.content, 'html.parser')
@@ -84,9 +84,9 @@ class RemoveBg:
         if session_token is None:
             self._login_credentials(email, password)
         else:
-            self._session_token = session_token
+            self.session_token = session_token
 
-        self._api_token = self._get_profile().select_one('[data-hj-suppress]').text.strip()
+        self.api_token = self._get_profile().select_one('[data-hj-suppress]').text.strip()
 
     @token_required('session')
     def get_available_credits(self) -> float:
@@ -100,7 +100,7 @@ class RemoveBg:
     @token_required('api')
     def remove_background(self, **options) -> bytes:
         return make_api_request(
-            'POST', 'removebg', self._api_token, data=options,
+            'POST', 'removebg', self.api_token, data=options,
             files={k: options.pop(k) for k in ['image_file', 'bg_image_file'] if k in options},
         ).content
 
