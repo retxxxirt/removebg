@@ -24,7 +24,7 @@ class RequestsTestCase(TestCase):
 
     def test_make_api_request(self):
         self.assertEqual(requests.make_api_request(
-            'POST', 'removebg', os.environ.get('REMOVEBG_TOKEN'),
+            'POST', 'removebg', os.environ.get('API_TOKEN'),
             data={'image_url': 'https://via.placeholder.com/625x400'}
         ).status_code, 200)
 
