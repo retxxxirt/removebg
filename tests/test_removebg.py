@@ -16,13 +16,16 @@ class RemoveBgTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         warnings.simplefilter('ignore', ResourceWarning)
+        super().setUpClass()
 
-        cls.client = RemoveBg(
-            os.environ.get('REMOVEBG_TOKEN'),
+    def setUp(self):
+        self.client = RemoveBg(
+            os.environ.get('API_TOKEN'),
+            os.environ.get('SESSION_TOKEN'),
             os.environ.get('ANTICAPTCHA_TOKEN')
         )
 
-        super().setUpClass()
+        super().setUp()
 
     def test_remove_background(self):
         self.client.remove_background(image_url='https://via.placeholder.com/625x400')
