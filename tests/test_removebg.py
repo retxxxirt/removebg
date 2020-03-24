@@ -82,3 +82,7 @@ class RemoveBgTestCase(TestCase):
 
     def test_get_available_previews(self):
         self.assertIsInstance(self.client.get_available_previews(), int)
+
+    def test_session_expired(self):
+        client = RemoveBg(session_token='expired-token')
+        self.assertRaises(exceptions.SessionExpired, client.get_available_credits)

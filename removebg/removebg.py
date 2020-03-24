@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 from python_anticaptcha import AnticaptchaClient, NoCaptchaTaskProxylessTask
 from requests import Session
 
+from . import exceptions
 from .decorators import token_required
-from .exceptions import AccountCreationFailed, LoginFailed
 from .requests import make_uri_request, make_request, make_url, make_api_request
 
 
@@ -45,7 +45,7 @@ class RemoveBg:
         }, allow_redirects=False)
 
         if response.status_code != 302:
-            raise LoginFailed(email)
+            raise exceptions.LoginFailed(email)
 
         self.session_token = session.cookies.get('remember_user_token')
 
@@ -54,6 +54,9 @@ class RemoveBg:
         response = make_uri_request('GET', 'profile', headers={
             'cookie': f'remember_user_token={self.session_token}'
         })
+
+        if not response.url.endswith('/profile'):
+            raise exceptions.SessionExpired()
 
         return BeautifulSoup(response.content, 'html.parser')
 
@@ -74,7 +77,7 @@ class RemoveBg:
         }, allow_redirects=False)
 
         if response.status_code != 302:
-            raise AccountCreationFailed(email)
+            raise exceptions.AccountCreationFailed(email)
 
     @staticmethod
     def activate_email(activation_link: str):
