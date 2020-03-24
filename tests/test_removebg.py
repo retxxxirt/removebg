@@ -26,6 +26,11 @@ class RemoveBgTestCase(TestCase):
 
         super().setUp()
 
+    def test_token_required(self):
+        self.assertRaises(exceptions.TokenRequired, RemoveBg().create_account)
+        self.assertRaises(exceptions.TokenRequired, RemoveBg().get_available_credits)
+        self.assertRaises(exceptions.TokenRequired, RemoveBg().remove_background)
+
     def test_remove_background(self):
         self.client.remove_background(image_url='https://via.placeholder.com/625x400')
 
