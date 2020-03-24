@@ -10,14 +10,12 @@ from .requests import make_uri_request, make_request, make_url, make_api_request
 
 
 class RemoveBg:
-    def __init__(self, api_token: str = None, anticaptcha_token: str = None):
+    def __init__(self, api_token: str = None, session_token: str = None, anticaptcha_token: str = None):
         self._api_token = api_token
+        self._session_token = session_token
         self._anticaptcha_token = anticaptcha_token
 
-    @staticmethod
-    def activate_email(activation_link: str):
-        make_request('GET', activation_link)
-
+    @token_required('anticaptcha')
     def _preauth(self, action: str) -> Tuple[Session, str, str]:
         response = make_uri_request('GET', f'users/{action}', session := Session())
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -32,6 +30,32 @@ class RemoveBg:
         recaptcha_token = solve_job.get_solution_response()
 
         return session, authenticity_token, recaptcha_token
+
+    @token_required('anticaptcha')
+    def _login_credentials(self, email: str, password: str):
+        session, authenticity_token, recaptcha_token = self._preauth('sign_in')
+
+        response = make_uri_request('POST', 'users/sign_in', session, data={
+            'utf8': '✓',
+            'authenticity_token': authenticity_token,
+            'user[email]': email,
+            'user[password]': password,
+            'user[remember_me]': 1,
+            'g-recaptcha-response': recaptcha_token
+        }, allow_redirects=False)
+
+        if response.status_code != 302:
+            raise LoginFailed(email)
+
+        self._session_token = session.cookies.get('remember_user_token')
+
+    @token_required('session')
+    def _get_profile(self) -> BeautifulSoup:
+        response = make_uri_request('GET', 'profile', headers={
+            'cookie': f'remember_user_token={self._session_token}'
+        })
+
+        return BeautifulSoup(response.content, 'html.parser')
 
     @token_required('anticaptcha')
     def create_account(self, email: str, password: str):
@@ -52,27 +76,26 @@ class RemoveBg:
         if response.status_code != 302:
             raise AccountCreationFailed(email)
 
-    @token_required('anticaptcha')
-    def login(self, email: str, password: str) -> str:
-        session, authenticity_token, recaptcha_token = self._preauth('sign_in')
+    @staticmethod
+    def activate_email(activation_link: str):
+        make_request('GET', activation_link)
 
-        response = make_uri_request('POST', 'users/sign_in', session, data={
-            'utf8': '✓',
-            'authenticity_token': authenticity_token,
-            'user[email]': email,
-            'user[password]': password,
-            'user[remember_me]': 0,
-            'g-recaptcha-response': recaptcha_token
-        }, allow_redirects=False)
+    def login(self, email: str = None, password: str = None, session_token: str = None):
+        if session_token is None:
+            self._login_credentials(email, password)
+        else:
+            self._session_token = session_token
 
-        if response.status_code != 302:
-            raise LoginFailed(email)
+        self._api_token = self._get_profile().select_one('[data-hj-suppress]').text.strip()
 
-        response = make_uri_request('GET', 'profile', session)
-        soup = BeautifulSoup(response.content, 'html.parser')
+    @token_required('session')
+    def get_available_credits(self) -> float:
+        return float(self._get_profile().select_one('.profile-credit-balance').parent.text.strip())
 
-        self._api_token = soup.select_one('[data-hj-suppress]').text.strip()
-        return self._api_token
+    @token_required('session')
+    def get_available_previews(self) -> int:
+        parent_element = self._get_profile().select_one('.profile-balance-arrow').parent
+        return int(parent_element.select('.row > div')[-1].text.strip().split()[0])
 
     @token_required('api')
     def remove_background(self, **options) -> bytes:
