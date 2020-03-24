@@ -10,8 +10,8 @@ from .requests import make_uri_request, make_request, make_url, make_api_request
 
 
 class RemoveBg:
-    def __init__(self, removebg_token: str = None, anticaptcha_token: str = None):
-        self._removebg_token = removebg_token
+    def __init__(self, api_token: str = None, anticaptcha_token: str = None):
+        self._api_token = api_token
         self._anticaptcha_token = anticaptcha_token
 
     @staticmethod
@@ -71,25 +71,25 @@ class RemoveBg:
         response = make_uri_request('GET', 'profile', session)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        self._removebg_token = soup.select_one('[data-hj-suppress]').text.strip()
-        return self._removebg_token
+        self._api_token = soup.select_one('[data-hj-suppress]').text.strip()
+        return self._api_token
 
-    @token_required('removebg')
+    @token_required('api')
     def remove_background(self, **options) -> bytes:
         return make_api_request(
-            'POST', 'removebg', self._removebg_token, data=options,
+            'POST', 'removebg', self._api_token, data=options,
             files={k: options.pop(k) for k in ['image_file', 'bg_image_file'] if k in options},
         ).content
 
-    @token_required('removebg')
+    @token_required('api')
     def remove_background_from_file(self, filepath: str, **options) -> bytes:
         with open(filepath, 'rb') as file:
             return self.remove_background(**{**options, 'image_file': file})
 
-    @token_required('removebg')
+    @token_required('api')
     def remove_background_from_url(self, url: str, **options) -> bytes:
         return self.remove_background(**{**options, 'image_url': url})
 
-    @token_required('removebg')
+    @token_required('api')
     def remove_background_from_base64(self, base64: str, **options) -> bytes:
         return self.remove_background(**{**options, 'image_file_b64': base64})
