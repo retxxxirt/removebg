@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='remove-bg',
     packages=['removebg'],
-    version='0.1.1',
+    version='0.2.0',
     license='MIT',
     description='Client for remove.bg with extra features.',
     author='retxxxirt',

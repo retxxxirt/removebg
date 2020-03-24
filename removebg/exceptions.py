@@ -20,6 +20,11 @@ class LoginFailed(RemoveBgException):
         super().__init__(f'Unable to login into account for unknown reason. Account email: {email}.')
 
 
+class SessionExpired(RemoveBgException):
+    def __init__(self):
+        super().__init__('Session token expired.')
+
+
 class APIException(RemoveBgException, ABC):
     @property
     def status_code(self):
