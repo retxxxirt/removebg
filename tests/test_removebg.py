@@ -61,6 +61,13 @@ class RemoveBgTestCase(TestCase):
             os.environ.get('REMOVEBG_USERNAME'), 'Strong-Pa$$w0rd'
         )
 
+    def test_generate_account(self):
+        client = RemoveBg(anticaptcha_token=os.environ.get('ANTICAPTCHA_TOKEN'))
+        username, password = client.generate_account()
+
+        self.assertIsInstance(username, str)
+        self.assertIsInstance(password, str)
+
     def test_login_using_credentials(self):
         client = RemoveBg(anticaptcha_token=os.environ.get('ANTICAPTCHA_TOKEN'))
         client.login(os.environ.get('REMOVEBG_USERNAME'), os.environ.get('REMOVEBG_PASSWORD'))

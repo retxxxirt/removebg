@@ -1,8 +1,10 @@
 from typing import Tuple
+from uuid import uuid4
 
 from bs4 import BeautifulSoup
 from python_anticaptcha import AnticaptchaClient, NoCaptchaTaskProxylessTask
 from requests import Session
+from tempmail import Tempmail
 
 from . import exceptions
 from .decorators import token_required
@@ -78,6 +80,19 @@ class RemoveBg:
 
         if response.status_code != 302:
             raise exceptions.AccountCreationFailed(email)
+
+    @token_required('anticaptcha')
+    def generate_account(self) -> Tuple[str, str]:
+        tempmail, password = Tempmail(), str(uuid4()).replace('-', '')[:16]
+        self.create_account(tempmail.email, password)
+
+        message = tempmail.wait_for('noreply@remove.bg')
+        soup = BeautifulSoup(message['mail_html'], 'html.parser')
+
+        self.activate_email(soup.select_one('.btn-primary')['href'])
+        self.login(tempmail.email, password)
+
+        return tempmail.email, password
 
     @staticmethod
     def activate_email(activation_link: str):
